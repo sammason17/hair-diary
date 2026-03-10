@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 type Column = "stewart" | "sue" | "notes";
 
@@ -64,8 +64,8 @@ export default function Calendar() {
         <div className="p-2 text-xs font-semibold bg-purple-50">Sue</div>
         <div className="p-2 text-xs font-semibold bg-amber-50">Notes</div>
         {slots.map(time => (
-          <>
-            <div key={`time-${time}`} className="border-t px-2 py-1 text-xs text-gray-500">
+          <React.Fragment key={time}>
+            <div className="border-t px-2 py-1 text-xs text-gray-500">
               {time}
             </div>
             {(["stewart", "sue", "notes"] as Column[]).map(col => {
@@ -83,8 +83,9 @@ export default function Calendar() {
                 </div>
               );
             })}
-          </>
+          </React.Fragment>
         ))}
+
       </div>
     </div>
   );
