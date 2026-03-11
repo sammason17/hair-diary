@@ -2,6 +2,8 @@ import { MongoClient } from "mongodb";
 
 const USE_REAL_DB = process.env.USE_REAL_DB === "true";
 const uri = process.env.MONGODB_URI;
+print("use real db: ", USE_REAL_DB)
+print("uri: ", uri)
 
 // Only validate MongoDB URI if we're actually using real MongoDB
 if (USE_REAL_DB && !uri) {
