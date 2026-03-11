@@ -34,6 +34,13 @@ function generateSlots() {
 
 const slots = generateSlots();
 
+function format12Hour(time24: string): string {
+  const [hours, minutes] = time24.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hours12 = hours % 12 || 12; // Convert 0 to 12 for midnight
+  return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
 function calculateEndTime(startTime: string, duration: number = 30): string {
   const [hours, minutes] = startTime.split(":").map(Number);
   const totalMinutes = hours * 60 + minutes + duration;
@@ -234,7 +241,7 @@ export default function Calendar() {
         {slots.map((time, timeIndex) => (
           <React.Fragment key={time}>
             <div className="border-t border-gray-200 px-2 py-2 text-xs text-gray-600 font-medium bg-gray-50">
-              {time}
+              {format12Hour(time)}
             </div>
             {(["stewart", "sue", "notes"] as Column[]).map(col => {
               // Find appointment that starts at this time
@@ -275,13 +282,13 @@ export default function Calendar() {
                       {appt.column === "notes" ? (
                         <>
                           <div className="font-normal leading-tight line-clamp-3">{appt.notes || "Note"}</div>
-                          <div className="text-[10px] opacity-75 mt-1">{appt.startTime} - {appt.endTime}</div>
+                          <div className="text-[10px] opacity-75 mt-1">{format12Hour(appt.startTime)} - {format12Hour(appt.endTime)}</div>
                         </>
                       ) : (
                         <>
                           <div className="font-semibold">{appt.clientName}</div>
                           {appt.phone && <div className="text-[10px] opacity-90">{appt.phone}</div>}
-                          <div className="text-[10px] opacity-75 mt-1">{appt.startTime} - {appt.endTime}</div>
+                          <div className="text-[10px] opacity-75 mt-1">{format12Hour(appt.startTime)} - {format12Hour(appt.endTime)}</div>
                         </>
                       )}
                     </div>
@@ -337,7 +344,7 @@ export default function Calendar() {
                   >
                     <option value="">Select time</option>
                     {slots.map(slot => (
-                      <option key={slot} value={slot}>{slot}</option>
+                      <option key={slot} value={slot}>{format12Hour(slot)}</option>
                     ))}
                   </select>
                 </div>
@@ -350,7 +357,7 @@ export default function Calendar() {
                   >
                     <option value="">Select time</option>
                     {slots.map(slot => (
-                      <option key={slot} value={slot}>{slot}</option>
+                      <option key={slot} value={slot}>{format12Hour(slot)}</option>
                     ))}
                   </select>
                 </div>

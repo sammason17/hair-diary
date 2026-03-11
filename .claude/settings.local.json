@@ -4,7 +4,8 @@
       "Bash(npm install:*)",
       "Bash(npm run test-coverage:*)",
       "Bash(node -e:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(npm test)"
     ]
   }
 }
