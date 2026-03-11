@@ -1,6 +1,7 @@
 
 import "./globals.css";
 import type { ReactNode } from "react";
+import { Providers } from "./providers";
 
 export const metadata = {
   title: "Hair Diary",
@@ -10,7 +11,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-100 min-h-screen">{children}</body>
+      <body className="bg-gray-100 min-h-screen">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

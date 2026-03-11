@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 type Column = "stewart" | "sue" | "notes";
 
@@ -42,6 +43,7 @@ function calculateEndTime(startTime: string, duration: number = 30): string {
 }
 
 export default function Calendar() {
+  const { data: session, status } = useSession();
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -53,7 +55,9 @@ export default function Calendar() {
   }, [date]);
 
   async function loadAppointments() {
-    const res = await fetch(`/api/appointments?date=${date}`);
+    const res = await fetch(`/api/appointments?date=${date}`, {
+      credentials: "include"
+    });
     if (!res.ok) return;
     const data = await res.json();
     setAppointments(data);
@@ -132,22 +136,28 @@ export default function Calendar() {
       const res = await fetch(`/api/appointments/${editingAppt._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData)
       });
       if (res.ok) {
         await loadAppointments();
         setShowModal(false);
+      } else {
+        alert("Failed to update appointment. Please try again.");
       }
     } else {
       // Create new
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData)
       });
       if (res.ok) {
         await loadAppointments();
         setShowModal(false);
+      } else {
+        alert("Failed to create appointment. Please try again.");
       }
     }
   }
@@ -157,11 +167,14 @@ export default function Calendar() {
     if (!confirm("Delete this appointment?")) return;
 
     const res = await fetch(`/api/appointments/${editingAppt._id}`, {
-      method: "DELETE"
+      method: "DELETE",
+      credentials: "include"
     });
     if (res.ok) {
       await loadAppointments();
       setShowModal(false);
+    } else {
+      alert("Failed to delete appointment. Please try again.");
     }
   }
 
