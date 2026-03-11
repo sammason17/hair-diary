@@ -12,3 +12,4 @@ pnpm-debug.log*
 .vercel
 user_credentials.md
 VERCEL_ENV_VARS.txt
+coverage
