@@ -32,11 +32,24 @@ cp .env.example .env.local
 
 # Start development server
 npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run linter
+npm run lint
 ```
 
 Development mode uses an in-memory database - no MongoDB setup required.
 
 Visit http://localhost:3000
+
+### Known Issues
+
+**Development Database**: The in-memory database currently has issues with CRUD operations in local development. Create, Update, and Delete operations may not work as expected. This will be addressed in an upcoming fix.
 
 ## Testing
 

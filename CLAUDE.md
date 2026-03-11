@@ -22,7 +22,7 @@ npm run build
 npm start
 
 # Run linter
-npm lint
+npm run lint
 
 # Run tests
 npm test
@@ -33,6 +33,10 @@ npm run test:watch
 # Run tests with coverage report
 npm run test-coverage
 ```
+
+### Known Issues
+
+**Development Database (In-Memory Mode)**: The in-memory database currently has issues with CRUD operations in local development. Create, Update, and Delete operations do not work properly on local. A ticket will be raised to fix this issue. In the meantime, use `USE_REAL_DB=true` with a MongoDB instance for full CRUD functionality.
 
 ## Environment Setup
 
