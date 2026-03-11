@@ -38,6 +38,21 @@ Development mode uses an in-memory database - no MongoDB setup required.
 
 Visit http://localhost:3000
 
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report (100% coverage required)
+npm run test-coverage
+```
+
+The project uses Jest for testing with comprehensive coverage requirements. All tests run against mocked dependencies to avoid real database calls.
+
 ## Production Deployment
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions including:

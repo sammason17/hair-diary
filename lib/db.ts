@@ -12,13 +12,13 @@ let inMemoryDB: {
       _id: new ObjectId(),
       username: "stewart",
       name: "Stewart",
-      passwordHash: "$2a$10$5a99giexs4OobpRjjztQGuEAAcXeXc511rEnXb2X8G9zWf94mqNaq" // password: "***REMOVED***"
+      passwordHash: "$2a$10$do0GLqgl8H1vU0/8rjAq/eFb7QYBQNquOJjAVvfVObwES3XxZreNe"
     },
     {
       _id: new ObjectId(),
       username: "sue",
       name: "Sue",
-      passwordHash: "$2a$10$CRJDtPFBNfERDvUcOMJNPe/voK/hq31CFSprKoM11JjBUn8BshmQG" // password: "***REMOVED***"
+      passwordHash: "$2a$10$YPrq3AvKQK9P1PMFQJO9w.tW2TZkZh7hFjqrndgZK2mRDD2Dqh72O"
     }
   ]
 };

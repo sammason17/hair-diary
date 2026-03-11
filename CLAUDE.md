@@ -23,6 +23,15 @@ npm start
 
 # Run linter
 npm lint
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test-coverage
 ```
 
 ## Environment Setup
@@ -131,6 +140,50 @@ All API routes and authentication use `getDb()` which automatically returns the 
 TypeScript path mappings:
 - `@/components/*` → `./components/*`
 - `@/lib/*` → `./lib/*`
+
+## Testing
+
+The project uses Jest for unit testing with 100% code coverage requirements.
+
+### Test Configuration
+
+- **Framework**: Jest with TypeScript support via ts-jest
+- **Environment**: Node (for testing server-side code)
+- **Coverage**: 100% threshold on statements, branches, functions, and lines
+- **Setup**: `jest.setup.ts` configures test environment variables
+- **Config**: `jest.config.ts` defines test patterns and coverage rules
+
+### Running Tests
+
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode (re-runs on file changes)
+npm run test:watch
+
+# Run tests with coverage report (enforces 100% coverage)
+npm run test-coverage
+```
+
+### Test Structure
+
+- Tests are located in `__tests__` directories alongside the code they test
+- Mock implementations prevent real database calls
+- Database abstraction layer (`lib/db.ts`) has comprehensive test coverage including:
+  - In-memory database operations (default development mode)
+  - MongoDB mode configuration
+  - All CRUD operations (Create, Read, Update, Delete)
+  - Edge cases and error handling
+
+### Writing New Tests
+
+When adding new features:
+1. Create test file in appropriate `__tests__` directory
+2. Use `@jest/globals` for imports (describe, it, expect, etc.)
+3. Mock external dependencies (database, APIs, etc.)
+4. Maintain 100% coverage threshold
+5. Test both happy paths and error cases
 
 ## Key Implementation Notes
 
