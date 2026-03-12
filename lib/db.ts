@@ -2,29 +2,66 @@ import { ObjectId } from "mongodb";
 import clientPromise from "./mongodb";
 
 // In-memory database for development
-let inMemoryDB: {
-  appointments: any[];
-  users: any[];
-} = {
-  appointments: [],
-  users: [
-    {
-      _id: new ObjectId(),
-      username: "stewart",
-      name: "Stewart",
-      passwordHash: "$2a$10$do0GLqgl8H1vU0/8rjAq/eFb7QYBQNquOJjAVvfVObwES3XxZreNe"
-    },
-    {
-      _id: new ObjectId(),
-      username: "sue",
-      name: "Sue",
-      passwordHash: "$2a$10$YPrq3AvKQK9P1PMFQJO9w.tW2TZkZh7hFjqrndgZK2mRDD2Dqh72O"
-    }
-  ]
-};
+// Use global to persist across Next.js hot module reloads in development
+declare global {
+  var __inMemoryDB:
+    | {
+        appointments: any[];
+        users: any[];
+      }
+    | undefined;
+}
+
+// Initialize in-memory database with pre-seeded users
+// This will only run once, even across hot reloads, thanks to global storage
+if (!global.__inMemoryDB) {
+  global.__inMemoryDB = {
+    appointments: [],
+    users: [
+      {
+        _id: new ObjectId(),
+        username: "stewart",
+        name: "Stewart",
+        passwordHash: "$2a$10$do0GLqgl8H1vU0/8rjAq/eFb7QYBQNquOJjAVvfVObwES3XxZreNe"
+      },
+      {
+        _id: new ObjectId(),
+        username: "sue",
+        name: "Sue",
+        passwordHash: "$2a$10$YPrq3AvKQK9P1PMFQJO9w.tW2TZkZh7hFjqrndgZK2mRDD2Dqh72O"
+      }
+    ]
+  };
+}
+
+const inMemoryDB = global.__inMemoryDB;
 
 // Use in-memory DB by default, only use real MongoDB when USE_REAL_DB=true (production)
 const USE_REAL_DB = process.env.USE_REAL_DB === "true";
+
+/**
+ * Reset the in-memory database - useful for testing
+ * This function should only be called in test environments
+ */
+export function resetInMemoryDB() {
+  global.__inMemoryDB = {
+    appointments: [],
+    users: [
+      {
+        _id: new ObjectId(),
+        username: "stewart",
+        name: "Stewart",
+        passwordHash: "$2a$10$do0GLqgl8H1vU0/8rjAq/eFb7QYBQNquOJjAVvfVObwES3XxZreNe"
+      },
+      {
+        _id: new ObjectId(),
+        username: "sue",
+        name: "Sue",
+        passwordHash: "$2a$10$YPrq3AvKQK9P1PMFQJO9w.tW2TZkZh7hFjqrndgZK2mRDD2Dqh72O"
+      }
+    ]
+  };
+}
 
 export async function getDb() {
   if (!USE_REAL_DB) {

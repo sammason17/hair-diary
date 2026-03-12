@@ -27,10 +27,7 @@ Professional appointment scheduling application for hairstylists. Built with Nex
 # Install dependencies
 npm install
 
-# Copy environment template
-cp .env.example .env.local
-
-# Start development server
+# Start development server (no setup required!)
 npm run dev
 
 # Build for production
@@ -43,13 +40,14 @@ npm start
 npm run lint
 ```
 
-Development mode uses an in-memory database - no MongoDB setup required.
+**Development mode uses an in-memory database** - no MongoDB, no .env file, no configuration needed! Just `npm run dev` and start working.
+
+- ✅ Auto-authenticated as "Stewart"
+- ✅ Full CRUD operations work
+- ✅ Data persists across hot reloads
+- ✅ Two pre-seeded users: stewart/sue (password: "password")
 
 Visit http://localhost:3000
-
-### Known Issues
-
-**Development Database**: The in-memory database currently has issues with CRUD operations in local development. Create, Update, and Delete operations may not work as expected. This will be addressed in an upcoming fix.
 
 ## Testing
 
@@ -87,11 +85,24 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions includin
 ## Architecture
 
 - **App Router**: Next.js 14 server components with client-side interactivity
-- **Authentication**: Server-side session validation on all protected routes
+- **Dual Auth System**: Development uses mock auth, production uses NextAuth v5
 - **Database Abstraction**: Single `getDb()` function supports both in-memory and MongoDB
-- **API Routes**: RESTful endpoints with session-based authorization
+- **Global Persistence**: In-memory DB survives Next.js hot reloads via global storage
+- **API Routes**: RESTful endpoints with authentication on all routes
 
 See [CLAUDE.md](CLAUDE.md) for detailed architecture documentation.
+
+## Recent Fixes (2026-03-12)
+
+The development in-memory database has been completely fixed! Previous issues with CRUD operations, authentication, and data persistence have been resolved:
+
+- ✅ Authentication now works in development mode (auto-login)
+- ✅ All CRUD operations (Create, Read, Update, Delete) function properly
+- ✅ Data persists across Next.js hot reloads
+- ✅ ObjectId serialization works correctly
+- ✅ Zero impact on production code
+
+See [DEV_MODE_FIXES.md](DEV_MODE_FIXES.md) for technical details.
 
 ## License
 

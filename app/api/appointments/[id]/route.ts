@@ -2,10 +2,10 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { ObjectId } from "mongodb";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/devAuth";
 
 export async function PUT(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
+  const session = await getAuth();
   if (!session) return new Response("Unauthorized", { status: 401 });
 
   const { id } = await params;
@@ -38,7 +38,7 @@ export async function PUT(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
+  const session = await getAuth();
   if (!session) return new Response("Unauthorized", { status: 401 });
 
   const { id } = await params;

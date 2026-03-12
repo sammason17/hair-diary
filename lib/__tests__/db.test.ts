@@ -32,6 +32,10 @@ describe('db.ts - In-Memory Database', () => {
 
     // Clear module cache to reset in-memory database
     jest.resetModules();
+
+    // Reset the global in-memory database
+    const { resetInMemoryDB } = await import('../db');
+    resetInMemoryDB();
   });
 
   afterEach(() => {
@@ -181,6 +185,31 @@ describe('db.ts - In-Memory Database', () => {
 
       expect(foundUsers).toHaveLength(1);
       expect(foundUsers[0]._id.toString()).toBe(stewartId.toString());
+    });
+
+    it('should filter by ObjectId in appointments collection', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const appointmentsCollection = db.collection('appointments');
+
+      // Insert a test appointment
+      const testAppointment = {
+        date: '2026-03-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        column: 'stewart',
+        clientName: 'Test Client'
+      };
+
+      const insertResult = await appointmentsCollection.insertOne(testAppointment);
+      const insertedId = insertResult.insertedId;
+
+      // Now find it using the ObjectId in a query
+      const foundAppointments = await appointmentsCollection.find({ _id: insertedId }).toArray();
+
+      expect(foundAppointments).toHaveLength(1);
+      expect(foundAppointments[0].clientName).toBe('Test Client');
+      expect(foundAppointments[0]._id.toString()).toBe(insertedId.toString());
     });
 
     it('should return empty array when no match found', async () => {

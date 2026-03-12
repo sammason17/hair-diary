@@ -34,13 +34,22 @@ npm run test:watch
 npm run test-coverage
 ```
 
-### Known Issues
-
-**Development Database (In-Memory Mode)**: The in-memory database currently has issues with CRUD operations in local development. Create, Update, and Delete operations do not work properly on local. A ticket will be raised to fix this issue. In the meantime, use `USE_REAL_DB=true` with a MongoDB instance for full CRUD functionality.
-
 ## Environment Setup
 
-Required environment variables (create `.env.local`):
+### Development Mode (Default - No Setup Required)
+
+Development mode uses an in-memory database with automatic authentication - just run `npm run dev` and start working immediately!
+
+- **No `.env.local` file needed**
+- **No MongoDB required**
+- **Auto-authenticated as "Stewart"**
+- **Full CRUD operations work**
+- **Data persists across hot reloads**
+- **Pre-seeded users**: stewart/sue (password: "password")
+
+### Production Mode
+
+For production deployment, create `.env.local` with:
 
 ```
 MONGODB_URI=<your-mongodb-atlas-connection-string>
@@ -72,13 +81,23 @@ MongoDB database with two collections:
 
 ### Authentication Flow
 
+The app uses a dual authentication system via `lib/devAuth.ts`:
+
+**Development Mode (USE_REAL_DB=false)**:
+- Automatic mock authentication - no login required
+- Returns pre-configured session for user "Stewart"
+- All API routes automatically authenticated
+- Sign out is a no-op (doesn't actually log out)
+- Perfect for local testing and development
+
+**Production Mode (USE_REAL_DB=true)**:
 - NextAuth v5 (beta) with Credentials provider
 - JWT-based sessions (no database sessions)
 - Authentication config in `lib/authOptions.ts`
 - Login page at `/login` with client-side form
 - Auth routes handled by `app/api/auth/[...nextauth]/route.ts`
-- PUT and DELETE operations on appointments require authentication
-- GET and POST on appointments are currently unauthenticated
+- All API routes require valid authentication
+- Real session management with proper sign out
 
 ### Database Abstraction Layer
 
@@ -86,9 +105,11 @@ The app uses a database abstraction in `lib/db.ts` that supports both in-memory 
 
 **In-Memory Mode (Default)**:
 - Controlled by `USE_REAL_DB` environment variable (false by default)
-- Stores data in a JavaScript object that resets on server restart
+- Stores data in global memory that persists across Next.js hot reloads
 - Perfect for development - no MongoDB setup required
-- Includes pre-seeded test users (stewart@example.com, sue@example.com)
+- Includes pre-seeded test users (stewart/sue with password "password")
+- Full CRUD operations supported
+- Data resets only on server restart (not on hot reload)
 
 **MongoDB Mode (Production)**:
 - Set `USE_REAL_DB=true` to enable
@@ -100,23 +121,24 @@ All API routes and authentication use `getDb()` which automatically returns the 
 
 ### API Routes
 
+All routes require authentication (auto-handled in development mode via `lib/devAuth.ts`):
+
 **GET /api/appointments**
 - Query param: `?date=YYYY-MM-DD` (optional)
 - Returns array of appointments for specified date (or all if no date)
-- No authentication required
+- ObjectIds serialized to strings in response
 
 **POST /api/appointments**
 - Creates new appointment
-- No authentication required
-- Returns created appointment with `_id`
+- Returns created appointment with `_id` (serialized to string)
 
 **PUT /api/appointments/[id]**
-- Updates appointment by MongoDB `_id`
-- No authentication required
+- Updates appointment by `_id` (MongoDB ObjectId)
+- Returns 204 on success, 404 if not found
 
 **DELETE /api/appointments/[id]**
-- Deletes appointment by MongoDB `_id`
-- No authentication required
+- Deletes appointment by `_id` (MongoDB ObjectId)
+- Returns 204 on success, 404 if not found
 
 ### Frontend Structure
 
@@ -191,13 +213,30 @@ When adding new features:
 
 ## Key Implementation Notes
 
-- Uses NextAuth v5 beta (API differs from v4) - currently optional/unused
-- Authentication is implemented but not enforced on API routes
-- No user registration flow - users must be manually seeded
-- Session strategy is JWT, not database-backed
-- In-memory database is default for easy development (set USE_REAL_DB=true for production MongoDB)
-- All appointments are publicly accessible (no per-user filtering)
-- Time slots are enforced at 15-minute intervals via dropdown selects
-- Appointments can span multiple time slots and display accordingly
-- Double-booking prevention checks for overlapping times within the same column
-- Notes column works differently: displays note text instead of client name, simplified form
+- **Dual Auth System**: Development mode auto-authenticates, production uses NextAuth v5 beta
+- **Global Persistence**: In-memory database uses `global.__inMemoryDB` to survive Next.js hot reloads
+- **No Registration**: Users must be manually seeded (pre-seeded in dev mode)
+- **Session Strategy**: JWT-based (not database-backed)
+- **Zero Production Impact**: All dev-mode code is isolated via `lib/devAuth.ts`
+- **Development Users**: stewart/sue with password "password"
+- **ObjectId Serialization**: All API responses serialize MongoDB ObjectIds to strings
+- **Time Slots**: Enforced at 15-minute intervals via dropdown selects
+- **Multi-Slot Appointments**: Can span multiple time slots and display accordingly
+- **Double-Booking Prevention**: Validates no overlapping appointments in same column
+- **Notes Column**: Displays note text instead of client name, simplified form
+
+## Development Authentication Bypass
+
+The `lib/devAuth.ts` module provides seamless switching between development and production:
+
+```typescript
+// Development (USE_REAL_DB=false)
+getAuth() → Returns mock session immediately
+devSignOut() → No-op, logs to console
+
+// Production (USE_REAL_DB=true)
+getAuth() → Calls real NextAuth auth()
+devSignOut() → Calls real NextAuth signOut()
+```
+
+This allows all API routes and pages to use the same code regardless of environment.

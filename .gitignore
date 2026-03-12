@@ -11,5 +11,6 @@ yarn-error.log*
 pnpm-debug.log*
 .vercel
 user_credentials.md
+DEV_MODE_FIXES.md
 VERCEL_ENV_VARS.txt
 coverage
