@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { format12Hour, calculateEndTime, getDayOfWeek } from "@/lib/calendarUtils";
 
 type Column = "stewart" | "sue" | "notes";
 
@@ -33,21 +34,6 @@ function generateSlots() {
 }
 
 const slots = generateSlots();
-
-function format12Hour(time24: string): string {
-  const [hours, minutes] = time24.split(":").map(Number);
-  const period = hours >= 12 ? "PM" : "AM";
-  const hours12 = hours % 12 || 12; // Convert 0 to 12 for midnight
-  return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
-}
-
-function calculateEndTime(startTime: string, duration: number = 30): string {
-  const [hours, minutes] = startTime.split(":").map(Number);
-  const totalMinutes = hours * 60 + minutes + duration;
-  const endHours = Math.floor(totalMinutes / 60);
-  const endMinutes = totalMinutes % 60;
-  return `${endHours.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`;
-}
 
 export default function Calendar() {
   const { data: session, status } = useSession();
@@ -203,6 +189,9 @@ export default function Calendar() {
 
   return (
     <div className="space-y-4">
+      <h1 className="text-3xl font-bold text-gray-800">
+        {getDayOfWeek(date)}
+      </h1>
       <div className="flex items-center gap-3">
         <button
           onClick={goToPreviousDay}

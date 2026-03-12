@@ -22,6 +22,7 @@ const config: Config = {
   // Coverage configuration
   collectCoverageFrom: [
     'lib/db.ts',
+    'lib/calendarUtils.ts',
   ],
 
   coverageReporters: [
