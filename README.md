@@ -1,6 +1,6 @@
 # Hair Diary
 
-Professional appointment scheduling application for hairstylists. Built with Next.js 14, TypeScript, and MongoDB.
+Professional appointment scheduling application for hairstylists. Built with Next.js 14, TypeScript, and MongoDB. With mocked dev environemnt.
 
 ## Features
 
