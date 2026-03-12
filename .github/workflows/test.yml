@@ -1,0 +1,26 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, master ]  # Run on pushes to main/master
+  pull_request:
+    branches: [ main, master ]  # Run on PRs to main/master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest      # Use Ubuntu virtual machine
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'     # Match your local Node version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run test-coverage
