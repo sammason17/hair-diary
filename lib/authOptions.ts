@@ -1,4 +1,3 @@
-
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { getDb } from "@/lib/db";
@@ -13,6 +12,7 @@ export const authOptions: NextAuthConfig = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        // Basic sanity check – let NextAuth handle as generic failure
         if (!credentials?.username || !credentials.password) {
           return null;
         }
@@ -24,21 +24,31 @@ export const authOptions: NextAuthConfig = {
           });
 
           if (!user || !user.passwordHash) {
+            // User not found or no password: treat as invalid credentials
             return null;
           }
 
-          const isValid = await compare(credentials.password as
-            string, user.passwordHash as string);
+          const isValid = await compare(
+            credentials.password as string,
+            user.passwordHash as string
+          );
 
-          if (!isValid) return null;
+          if (!isValid) {
+            // Wrong password: treat as invalid credentials
+            return null;
+          }
 
+          // Success
           return {
             id: String(user._id),
             name: user.name as string,
             email: user.username as string
           };
         } catch (error) {
-          console.error("Auth error:", error);
+          // Any DB / Mongo / network error comes here.
+          // Log it for yourself, but return null so the user just sees
+          // a generic "Sign in failed" and can try again.
+          console.error("Auth DB error:", error);
           return null;
         }
       }

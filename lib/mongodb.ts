@@ -8,7 +8,10 @@ if (USE_REAL_DB && !uri) {
   throw new Error("MONGODB_URI not set but USE_REAL_DB is true");
 }
 
-const options = {};
+const options = {
+  serverSelectionTimeoutMS: 60000,
+  connectTimeoutMS: 60000,
+};
 
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
@@ -27,7 +30,7 @@ if (USE_REAL_DB && uri) {
 } else {
   // Return a dummy promise that will never be used (in-memory DB will be used instead)
   // Create a promise that never resolves to avoid unhandled rejection warnings
-  clientPromise = new Promise(() => {}) as Promise<MongoClient>;
+  clientPromise = new Promise(() => { }) as Promise<MongoClient>;
 }
 
 export default clientPromise;
