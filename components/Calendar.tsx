@@ -175,16 +175,24 @@ export default function Calendar() {
     setDate(new Date().toISOString().slice(0, 10));
   }
 
+  function shiftDate(dateStr: string, delta: number): string {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const next = new Date(y, m - 1, d + delta);
+    return (
+      next.getFullYear() +
+      "-" +
+      String(next.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(next.getDate()).padStart(2, "0")
+    );
+  }
+
   function goToPreviousDay() {
-    const current = new Date(date);
-    current.setDate(current.getDate() - 1);
-    setDate(current.toISOString().slice(0, 10));
+    setDate(shiftDate(date, -1));
   }
 
   function goToNextDay() {
-    const current = new Date(date);
-    current.setDate(current.getDate() + 1);
-    setDate(current.toISOString().slice(0, 10));
+    setDate(shiftDate(date, 1));
   }
 
   return (
