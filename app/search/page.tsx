@@ -1,36 +1,34 @@
-
-import Calendar from "@/components/Calendar";
+import SearchPage from "@/components/SearchPage";
 import { getAuth, devSignOut } from "@/lib/devAuth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
 const USE_REAL_DB = process.env.USE_REAL_DB === "true";
 
-export default async function HomePage() {
+export default async function Search() {
   const session = await getAuth();
 
-  // In development mode, always allow access (don't redirect)
-  // In production mode, redirect if not authenticated
   if (!session && USE_REAL_DB) {
     redirect("/login");
   }
 
+  const currentUser = session?.user?.name ?? "stewart";
+
   return (
     <main className="max-w-5xl mx-auto py-8 px-4">
       <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Hair Diary</h1>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 px-3 py-1.5 rounded-lg transition-all">
+            ← Calendar
+          </Link>
+          <h1 className="text-2xl font-semibold">Search Appointments</h1>
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">
             {USE_REAL_DB
-              ? `Logged in as: ${session?.user?.name}`
-              : `Development Mode - ${session?.user?.name}`}
+              ? `Logged in as: ${currentUser}`
+              : `Development Mode - ${currentUser}`}
           </span>
-          <Link
-            href="/search"
-            className="flex items-center gap-1.5 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 px-3 py-1.5 rounded-lg transition-all"
-          >
-            🔍 Search
-          </Link>
           {USE_REAL_DB && (
             <form action={async () => {
               "use server";
@@ -43,7 +41,7 @@ export default async function HomePage() {
           )}
         </div>
       </header>
-      <Calendar />
+      <SearchPage currentUser={currentUser} />
     </main>
   );
 }

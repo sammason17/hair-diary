@@ -5,10 +5,11 @@ Professional appointment scheduling application for hairstylists. Built with Nex
 ## Features
 
 - Daily calendar view with 15-minute time slots (07:00 - 20:00)
-- Multi-column booking (Stewart, Sue, Notes)
+- Multi-column booking (Stewart, Sue, Notes) with per-user colour coding (blue / green / amber)
 - Full CRUD operations with modal interface
 - Date navigation with keyboard shortcuts
 - Appointment conflict prevention
+- **Search page** — real-time full-text search across all appointments with per-column filters
 - Secure authentication with NextAuth v5
 - Dual-mode database (in-memory for development, MongoDB for production)
 
@@ -89,6 +90,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions includin
 - **Database Abstraction**: Single `getDb()` function supports both in-memory and MongoDB
 - **Global Persistence**: In-memory DB survives Next.js hot reloads via global storage
 - **API Routes**: RESTful endpoints with authentication on all routes
+- **Search**: `GET /api/appointments/search?q=&columns=` — regex search across `clientName`, `phone` and `notes` fields, filterable by column
 
 See [CLAUDE.md](CLAUDE.md) for detailed architecture documentation.
 

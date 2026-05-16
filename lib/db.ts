@@ -63,35 +63,73 @@ export function resetInMemoryDB() {
   };
 }
 
+/**
+ * Evaluate a single field condition against a value.
+ * Supports: plain equality, $in, $regex/$options.
+ */
+function matchesFieldCondition(itemValue: any, condition: any): boolean {
+  if (condition === null || typeof condition !== "object" || condition instanceof ObjectId) {
+    // Plain equality
+    if (condition instanceof ObjectId) {
+      return String(itemValue) === condition.toString();
+    }
+    return itemValue === condition;
+  }
+
+  return Object.entries(condition).every(([op, opVal]) => {
+    switch (op) {
+      case "$in":
+        return (opVal as any[]).includes(itemValue);
+      case "$regex": {
+        const flags = (condition["$options"] as string | undefined) ?? "";
+        return new RegExp(opVal as string, flags).test(String(itemValue ?? ""));
+      }
+      case "$options":
+        // Handled inside $regex case — ignore here
+        return true;
+      default:
+        return false;
+    }
+  });
+}
+
+/**
+ * Evaluate a MongoDB-style query object against an in-memory item.
+ * Supports: plain equality, $or, $in, $regex/$options.
+ */
+function matchesQuery(item: any, query: any): boolean {
+  return Object.entries(query).every(([key, value]) => {
+    if (key === "$or") {
+      return (value as any[]).some(subQuery => matchesQuery(item, subQuery));
+    }
+    if (key === "_id" && value instanceof ObjectId) {
+      return item._id.toString() === value.toString();
+    }
+    return matchesFieldCondition(item[key], value);
+  });
+}
+
 export async function getDb() {
   if (!USE_REAL_DB) {
     return {
       collection: (name: string) => ({
         find: (query: any = {}) => ({
+          sort: (_sortSpec: any) => ({
+            toArray: async () => {
+              const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
+              if (Object.keys(query).length === 0) return [...data];
+              return data.filter((item: any) => matchesQuery(item, query));
+            }
+          }),
           toArray: async () => {
             const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
             if (Object.keys(query).length === 0) return data;
-
-            return data.filter((item: any) => {
-              return Object.entries(query).every(([key, value]) => {
-                if (key === "_id" && value instanceof ObjectId) {
-                  return item._id.toString() === value.toString();
-                }
-                return item[key] === value;
-              });
-            });
+            return data.filter((item: any) => matchesQuery(item, query));
           }
         }),
         findOne: async (query: any) => {
           const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
-          return data.find((item: any) => {
-            return Object.entries(query).every(([key, value]) => {
-              if (key === "_id" && value instanceof ObjectId) {
-                return item._id.toString() === value.toString();
-              }
-              return item[key] === value;
-            });
-          });
+          return data.find((item: any) => matchesQuery(item, query)) ?? null;
         },
         insertOne: async (doc: any) => {
           const newDoc = { ...doc, _id: new ObjectId() };
@@ -100,15 +138,7 @@ export async function getDb() {
         },
         updateOne: async (query: any, update: any) => {
           const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
-          const index = data.findIndex((item: any) => {
-            return Object.entries(query).every(([key, value]) => {
-              if (key === "_id" && value instanceof ObjectId) {
-                return item._id.toString() === value.toString();
-              }
-              return item[key] === value;
-            });
-          });
-
+          const index = data.findIndex((item: any) => matchesQuery(item, query));
           if (index !== -1 && update.$set) {
             data[index] = { ...data[index], ...update.$set };
           }
@@ -116,15 +146,7 @@ export async function getDb() {
         },
         deleteOne: async (query: any) => {
           const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
-          const index = data.findIndex((item: any) => {
-            return Object.entries(query).every(([key, value]) => {
-              if (key === "_id" && value instanceof ObjectId) {
-                return item._id.toString() === value.toString();
-              }
-              return item[key] === value;
-            });
-          });
-
+          const index = data.findIndex((item: any) => matchesQuery(item, query));
           if (index !== -1) {
             data.splice(index, 1);
           }

@@ -232,7 +232,7 @@ export default function Calendar() {
       <div className="grid grid-cols-[80px_repeat(3,1fr)] gap-0 bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-3 text-xs font-semibold bg-gray-200 border-b-2 border-gray-300">Time</div>
         <div className="p-3 text-xs font-semibold bg-blue-100 border-b-2 border-blue-300">Stewart</div>
-        <div className="p-3 text-xs font-semibold bg-purple-100 border-b-2 border-purple-300">Sue</div>
+        <div className="p-3 text-xs font-semibold bg-green-100 border-b-2 border-green-300">Sue</div>
         <div className="p-3 text-xs font-semibold bg-amber-100 border-b-2 border-amber-300">Notes</div>
 
         {slots.map((time, timeIndex) => (
@@ -275,7 +275,15 @@ export default function Calendar() {
                   onClick={() => appt ? openEditModal(appt) : openCreateModal(time, col)}
                 >
                   {appt && (
-                    <div className="absolute inset-1.5 rounded px-2 py-1 text-xs text-white bg-gradient-to-r from-blue-500 to-blue-600 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                    <div
+                      className={`absolute inset-1.5 rounded px-2 py-1 text-xs text-white shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
+                        appt.column === "notes"
+                          ? "bg-gradient-to-r from-amber-500 to-amber-600"
+                          : appt.column === "sue"
+                          ? "bg-gradient-to-r from-green-500 to-green-600"
+                          : "bg-gradient-to-r from-blue-500 to-blue-600"
+                      }`}
+                    >
                       {appt.column === "notes" ? (
                         <>
                           <div className="font-normal leading-tight line-clamp-3">{appt.notes || "Note"}</div>
