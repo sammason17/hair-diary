@@ -45,6 +45,7 @@ export default function Calendar() {
 
   useEffect(() => {
     loadAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
 
   async function loadAppointments() {

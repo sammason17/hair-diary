@@ -67,7 +67,7 @@ export function resetInMemoryDB() {
  * Evaluate a single field condition against a value.
  * Supports: plain equality, $in, $regex/$options.
  */
-function isObjectIdLike(val: any): boolean {
+function isObjectIdLike(val: any): val is { toString(): string } {
   return val != null && val.constructor?.name === 'ObjectId';
 }
 
