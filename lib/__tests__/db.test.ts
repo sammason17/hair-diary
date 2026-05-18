@@ -243,6 +243,138 @@ describe('db.ts - In-Memory Database', () => {
 
       expect(result).toEqual([]);
     });
+
+    it('should filter using $or operator', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const usersCollection = db.collection('users');
+
+      const result = await usersCollection.find({ $or: [{ username: 'stewart' }, { username: 'sue' }] }).toArray();
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('should filter using $in operator', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const usersCollection = db.collection('users');
+
+      const result = await usersCollection.find({ username: { $in: ['stewart', 'sue'] } }).toArray();
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('should filter using $in operator returning partial match', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const usersCollection = db.collection('users');
+
+      const result = await usersCollection.find({ username: { $in: ['stewart', 'nobody'] } }).toArray();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].username).toBe('stewart');
+    });
+
+    it('should filter using $regex operator', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const usersCollection = db.collection('users');
+
+      const result = await usersCollection.find({ username: { $regex: 'stew' } }).toArray();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].username).toBe('stewart');
+    });
+
+    it('should filter using $regex with $options (case-insensitive)', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const usersCollection = db.collection('users');
+
+      const result = await usersCollection.find({ username: { $regex: 'STEWART', $options: 'i' } }).toArray();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].username).toBe('stewart');
+    });
+
+    it('should return no results for unsupported operator (default switch branch)', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const usersCollection = db.collection('users');
+
+      // $gt is not implemented; the default: return false branch should fire,
+      // causing every() to short-circuit and return no matches
+      const result = await usersCollection.find({ username: { $gt: 'a' } } as any).toArray();
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should match ObjectId on a non-_id field via matchesFieldCondition', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const appointmentsCollection = db.collection('appointments');
+
+      // Store an ObjectId value in a custom field (not _id) so that
+      // matchesFieldCondition receives an ObjectId condition (lines 73-75 in db.ts)
+      const refId = new ObjectId();
+      await appointmentsCollection.insertOne({ tag: 'labelled', ref: refId });
+      await appointmentsCollection.insertOne({ tag: 'other', ref: new ObjectId() });
+
+      const found = await appointmentsCollection.find({ ref: refId }).toArray();
+
+      expect(found).toHaveLength(1);
+      expect(found[0].tag).toBe('labelled');
+    });
+
+    it('should support find().sort().toArray() chain with a filter', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const appointmentsCollection = db.collection('appointments');
+
+      await appointmentsCollection.insertOne({ date: '2026-03-16', clientName: 'B Client' });
+      await appointmentsCollection.insertOne({ date: '2026-03-15', clientName: 'A Client' });
+
+      // Non-empty query so the filter branch inside sort().toArray() is exercised
+      const result = await appointmentsCollection.find({ date: '2026-03-15' }).sort({ date: 1 }).toArray();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].clientName).toBe('A Client');
+    });
+
+    it('should support find().sort().toArray() with empty query', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const usersCollection = db.collection('users');
+
+      const result = await usersCollection.find().sort({ name: 1 }).toArray();
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('should support find().sort().toArray() on nonexistent collection (|| [] branch)', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const emptyCollection = db.collection('nonexistent');
+
+      // Exercises the `|| []` fallback inside sort().toArray() (line 124 in db.ts)
+      const result = await emptyCollection.find({ name: 'x' }).sort({ name: 1 }).toArray();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should match $regex against a field with null value (?? "" branch)', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      const appointmentsCollection = db.collection('appointments');
+
+      // Insert a document with a null/missing field so that $regex hits the `?? ""` fallback
+      await appointmentsCollection.insertOne({ date: '2026-03-15', clientName: null });
+
+      const result = await appointmentsCollection.find({ clientName: { $regex: 'nobody' } }).toArray();
+
+      // null becomes "" which won't match 'nobody'
+      expect(result).toHaveLength(0);
+    });
   });
 
   describe('findOne() - Single Document Query', () => {
@@ -370,6 +502,21 @@ describe('db.ts - In-Memory Database', () => {
 
       const found = await appointmentsCollection.findOne({ _id: result.insertedId });
       expect(found?._id).toEqual(result.insertedId);
+    });
+
+    it('should insert into a brand-new (unknown) collection name', async () => {
+      const { getDb } = await import('../db');
+      const db = await getDb();
+      // 'tags' is not pre-seeded, so the insertOne path must initialise the array
+      const tagsCollection = db.collection('tags');
+
+      const result = await tagsCollection.insertOne({ label: 'colour', value: 'red' });
+
+      expect(result.insertedId).toBeDefined();
+
+      const all = await tagsCollection.find().toArray();
+      expect(all).toHaveLength(1);
+      expect(all[0].label).toBe('colour');
     });
   });
 

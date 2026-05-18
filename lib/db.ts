@@ -67,12 +67,16 @@ export function resetInMemoryDB() {
  * Evaluate a single field condition against a value.
  * Supports: plain equality, $in, $regex/$options.
  */
+function isObjectIdLike(val: any): boolean {
+  return val != null && val.constructor?.name === 'ObjectId';
+}
+
 function matchesFieldCondition(itemValue: any, condition: any): boolean {
-  if (condition === null || typeof condition !== "object" || condition instanceof ObjectId) {
-    // Plain equality
-    if (condition instanceof ObjectId) {
-      return String(itemValue) === condition.toString();
-    }
+  if (isObjectIdLike(condition)) {
+    // ObjectId: compare by string representation (robust across module resets)
+    return itemValue?.toString() === condition.toString();
+  }
+  if (condition === null || typeof condition !== "object") {
     return itemValue === condition;
   }
 
@@ -102,7 +106,7 @@ function matchesQuery(item: any, query: any): boolean {
     if (key === "$or") {
       return (value as any[]).some(subQuery => matchesQuery(item, subQuery));
     }
-    if (key === "_id" && value instanceof ObjectId) {
+    if (key === "_id" && isObjectIdLike(value)) {
       return item._id.toString() === value.toString();
     }
     return matchesFieldCondition(item[key], value);
