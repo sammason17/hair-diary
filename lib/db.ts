@@ -34,7 +34,7 @@ if (!global.__inMemoryDB) {
   };
 }
 
-const inMemoryDB = global.__inMemoryDB;
+
 
 // Use in-memory DB by default, only use real MongoDB when USE_REAL_DB=true (production)
 const USE_REAL_DB = process.env.USE_REAL_DB === "true";
@@ -116,28 +116,36 @@ export async function getDb() {
         find: (query: any = {}) => ({
           sort: (_sortSpec: any) => ({
             toArray: async () => {
-              const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
+              const db = global.__inMemoryDB!;
+              const data = db[name as keyof typeof db] || [];
               if (Object.keys(query).length === 0) return [...data];
               return data.filter((item: any) => matchesQuery(item, query));
             }
           }),
           toArray: async () => {
-            const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
-            if (Object.keys(query).length === 0) return data;
+            const db = global.__inMemoryDB!;
+            const data = db[name as keyof typeof db] || [];
+            if (Object.keys(query).length === 0) return [...data];
             return data.filter((item: any) => matchesQuery(item, query));
           }
         }),
         findOne: async (query: any) => {
-          const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
-          return data.find((item: any) => matchesQuery(item, query)) ?? null;
+          const db = global.__inMemoryDB!;
+          const data = db[name as keyof typeof db] || [];
+          return data.find((item: any) => matchesQuery(item, query)) ?? undefined;
         },
         insertOne: async (doc: any) => {
+          const db = global.__inMemoryDB!;
           const newDoc = { ...doc, _id: new ObjectId() };
-          (inMemoryDB[name as keyof typeof inMemoryDB] as any[]).push(newDoc);
+          if (!db[name as keyof typeof db]) {
+            (db as any)[name] = [];
+          }
+          (db[name as keyof typeof db] as any[]).push(newDoc);
           return { insertedId: newDoc._id };
         },
         updateOne: async (query: any, update: any) => {
-          const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
+          const db = global.__inMemoryDB!;
+          const data = db[name as keyof typeof db] || [];
           const index = data.findIndex((item: any) => matchesQuery(item, query));
           if (index !== -1 && update.$set) {
             data[index] = { ...data[index], ...update.$set };
@@ -145,7 +153,8 @@ export async function getDb() {
           return { modifiedCount: index !== -1 ? 1 : 0 };
         },
         deleteOne: async (query: any) => {
-          const data = inMemoryDB[name as keyof typeof inMemoryDB] || [];
+          const db = global.__inMemoryDB!;
+          const data = db[name as keyof typeof db] || [];
           const index = data.findIndex((item: any) => matchesQuery(item, query));
           if (index !== -1) {
             data.splice(index, 1);
