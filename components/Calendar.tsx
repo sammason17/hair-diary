@@ -230,80 +230,74 @@ export default function Calendar() {
         </button>
       </div>
 
-      <div className="grid grid-cols-[80px_repeat(3,1fr)] gap-0 bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="p-3 text-xs font-semibold bg-gray-200 border-b-2 border-gray-300">Time</div>
-        <div className="p-3 text-xs font-semibold bg-blue-100 border-b-2 border-blue-300">Stewart</div>
-        <div className="p-3 text-xs font-semibold bg-green-100 border-b-2 border-green-300">Sue</div>
-        <div className="p-3 text-xs font-semibold bg-amber-100 border-b-2 border-amber-300">Notes</div>
+      <div className="grid grid-cols-[80px_repeat(3,1fr)] gap-0 bg-white rounded-lg shadow-lg overflow-hidden relative">
+        {/* Headers */}
+        <div className="p-3 text-xs font-semibold bg-gray-200 border-b-2 border-gray-300" style={{ gridColumn: 1, gridRow: 1 }}>Time</div>
+        <div className="p-3 text-xs font-semibold bg-blue-100 border-b-2 border-blue-300" style={{ gridColumn: 2, gridRow: 1 }}>Stewart</div>
+        <div className="p-3 text-xs font-semibold bg-green-100 border-b-2 border-green-300" style={{ gridColumn: 3, gridRow: 1 }}>Sue</div>
+        <div className="p-3 text-xs font-semibold bg-amber-100 border-b-2 border-amber-300" style={{ gridColumn: 4, gridRow: 1 }}>Notes</div>
 
+        {/* Background Grid Cells */}
         {slots.map((time, timeIndex) => (
           <React.Fragment key={time}>
-            <div className="border-t border-gray-200 px-2 py-2 text-xs text-gray-600 font-medium bg-gray-50">
+            <div className="border-t border-gray-200 px-2 py-2 text-xs text-gray-600 font-medium bg-gray-50" style={{ gridColumn: 1, gridRow: timeIndex + 2 }}>
               {format12Hour(time)}
             </div>
-            {(["stewart", "sue", "notes"] as Column[]).map(col => {
-              // Find appointment that starts at this time
-              const appt = appointments.find(a => a.startTime === time && a.column === col);
-
-              // Check if this slot is occupied by an earlier appointment that spans here
-              const isOccupied = appointments.some(a => {
-                if (a.column !== col) return false;
-                const apptStartIndex = slots.indexOf(a.startTime);
-                const apptEndIndex = slots.indexOf(a.endTime);
-                return apptStartIndex < timeIndex && apptEndIndex > timeIndex;
-              });
-
-              // Calculate how many slots this appointment spans
-              let rowSpan = 1;
-              if (appt) {
-                const startIndex = slots.indexOf(appt.startTime);
-                const endIndex = slots.indexOf(appt.endTime);
-                if (startIndex !== -1 && endIndex !== -1) {
-                  rowSpan = endIndex - startIndex;
-                }
-              }
-
-              // If occupied by earlier appointment, render empty cell
-              if (isOccupied && !appt) {
-                return null; // Skip rendering, CSS grid will handle it
-              }
-
-              return (
-                <div
-                  key={`${time}-${col}`}
-                  className="border-t border-l border-gray-200 min-h-[40px] p-1.5 cursor-pointer hover:bg-gray-50 transition-colors relative"
-                  style={appt ? { gridRowEnd: `span ${rowSpan}` } : {}}
-                  onClick={() => appt ? openEditModal(appt) : openCreateModal(time, col)}
-                >
-                  {appt && (
-                    <div
-                      className={`absolute inset-1.5 rounded px-2 py-1 text-xs text-white shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
-                        appt.column === "notes"
-                          ? "bg-gradient-to-r from-amber-500 to-amber-600"
-                          : appt.column === "sue"
-                          ? "bg-gradient-to-r from-green-500 to-green-600"
-                          : "bg-gradient-to-r from-blue-500 to-blue-600"
-                      }`}
-                    >
-                      {appt.column === "notes" ? (
-                        <>
-                          <div className="font-normal leading-tight line-clamp-3">{appt.notes || "Note"}</div>
-                          <div className="text-[10px] opacity-75 mt-1">{format12Hour(appt.startTime)} - {format12Hour(appt.endTime)}</div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="font-semibold">{appt.clientName}</div>
-                          {appt.phone && <div className="text-[10px] opacity-90">{appt.phone}</div>}
-                          <div className="text-[10px] opacity-75 mt-1">{format12Hour(appt.startTime)} - {format12Hour(appt.endTime)}</div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {(["stewart", "sue", "notes"] as Column[]).map((col, colIdx) => (
+              <div
+                key={`bg-${time}-${col}`}
+                className="border-t border-l border-gray-200 min-h-[40px] p-1.5 cursor-pointer hover:bg-gray-50 transition-colors"
+                style={{ gridColumn: colIdx + 2, gridRow: timeIndex + 2 }}
+                onClick={() => openCreateModal(time, col)}
+              />
+            ))}
           </React.Fragment>
         ))}
+
+        {/* Appointments - Explicitly overlayed on the grid */}
+        {appointments.map((appt) => {
+          const startIndex = slots.indexOf(appt.startTime);
+          const endIndex = slots.indexOf(appt.endTime);
+          if (startIndex === -1 || endIndex === -1) return null;
+          
+          const colIdx = appt.column === "stewart" ? 2 : appt.column === "sue" ? 3 : 4;
+
+          return (
+            <div
+              key={appt._id || Math.random().toString()}
+              className="p-1 cursor-pointer relative z-10"
+              style={{
+                gridColumn: colIdx,
+                gridRowStart: startIndex + 2,
+                gridRowEnd: endIndex + 2,
+              }}
+              onClick={() => openEditModal(appt)}
+            >
+              <div
+                className={`w-full h-full rounded px-2 py-1 text-xs text-white shadow-sm hover:shadow-md transition-shadow overflow-hidden opacity-95 hover:opacity-100 border border-white/20 ${
+                  appt.column === "notes"
+                    ? "bg-gradient-to-r from-amber-500 to-amber-600"
+                    : appt.column === "sue"
+                    ? "bg-gradient-to-r from-green-500 to-green-600"
+                    : "bg-gradient-to-r from-blue-500 to-blue-600"
+                }`}
+              >
+                {appt.column === "notes" ? (
+                  <>
+                    <div className="font-normal leading-tight line-clamp-3">{appt.notes || "Note"}</div>
+                    <div className="text-[10px] opacity-75 mt-1">{format12Hour(appt.startTime)} - {format12Hour(appt.endTime)}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-semibold">{appt.clientName}</div>
+                    {appt.phone && <div className="text-[10px] opacity-90">{appt.phone}</div>}
+                    <div className="text-[10px] opacity-75 mt-1">{format12Hour(appt.startTime)} - {format12Hour(appt.endTime)}</div>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {showModal && (

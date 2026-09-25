@@ -19,8 +19,31 @@ export async function PUT(_req: NextRequest, { params }: { params: Promise<{ id:
   // Remove _id from body as MongoDB doesn't allow updating the _id field
   const { _id, ...updateData } = body;
   const db = await getDb();
-
+  
   try {
+    const existingAppt = await db.collection("appointments").findOne({ _id: new ObjectId(id) });
+    if (!existingAppt) {
+      return new Response("Appointment not found", { status: 404 });
+    }
+
+    const finalAppt = { ...existingAppt, ...updateData };
+
+    if (finalAppt.date && finalAppt.column && finalAppt.startTime && finalAppt.endTime) {
+      const appointments = await db.collection("appointments").find({ 
+        date: finalAppt.date, 
+        column: finalAppt.column 
+      }).toArray();
+      
+      const hasConflict = appointments.some(a => {
+        if (a._id.toString() === id) return false;
+        return a.startTime < finalAppt.endTime && a.endTime > finalAppt.startTime;
+      });
+
+      if (hasConflict) {
+        return new Response(JSON.stringify({ error: "Time slot is already booked" }), { status: 409 });
+      }
+    }
+
     const result = await db.collection("appointments").updateOne(
       { _id: new ObjectId(id) },
       { $set: updateData }

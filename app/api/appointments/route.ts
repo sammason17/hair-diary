@@ -25,6 +25,20 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const db = await getDb();
+
+  // Check for double booking conflicts
+  const { date, column, startTime, endTime } = body;
+  if (date && column && startTime && endTime) {
+    const appointments = await db.collection("appointments").find({ date, column }).toArray();
+    const hasConflict = appointments.some(a => {
+      return a.startTime < endTime && a.endTime > startTime;
+    });
+
+    if (hasConflict) {
+      return new Response(JSON.stringify({ error: "Time slot is already booked" }), { status: 409 });
+    }
+  }
+
   const result = await db.collection("appointments").insertOne(body);
   // Serialize ObjectId to string for JSON response
   return Response.json({ _id: result.insertedId.toString(), ...body }, { status: 201 });
